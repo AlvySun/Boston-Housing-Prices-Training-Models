@@ -1,0 +1,69 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.datasets import load_boston
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeRegressor
+
+# Python code that uses the Scikit-Learn Decision Tree Regressor algorithm to predict housing prices based on a subset of house features.
+# Use the pseudo-random number generator and "seed" to randomly select 4 features for building a decision tree. 
+# Use the entire set of examples in the dataset for training the model.
+
+boston = load_boston()
+X = boston["data"]
+Y = boston["target"]
+features = boston["feature_names"]
+
+# Outputs: State the seed value, the feature names, the depth of the tree, the number of leaves of the tree and the decision tree coefficient
+# of determination score for the two best and two worst combinations of features found during testing.
+
+seed = 0
+np.random.seed(seed)
+index = np.arange(13)
+np.random.shuffle(index)
+idx_feat = sorted(index[:4])
+print(features[idx_feat])
+
+regressor = DecisionTreeRegressor(random_state=0,max_depth=5)
+regressor.fit(X,Y)
+Y_pred = regressor.predict(X)
+print(regressor.score(X,Y))
+#cross_val_score(regressor, X, Y, cv=10)
+
+plt.figure(figsize=(15,8))
+plt.plot(Y_pred)
+plt.plot(Y)
+
+print(regressor.score(X,Y))
+print(regressor.get_depth())
+print(regressor.get_n_leaves())
+
+# Python code that uses the Scikit-Learn KNeighborsRegressor algorithm to predict housing prices based on a subset of house features. 
+# Followed the same procedure as was used for the Decision Tree Regressor.
+
+from sklearn.neighbors import KNeighborsRegressor
+X = boston["data"]
+Y = boston["target"]
+features = boston["feature_names"]
+
+seed = 3
+np.random.seed(seed)
+index = np.arange(13)
+np.random.shuffle(index)
+idx_feat = sorted(index[:4])
+print(features[idx_feat])
+neigh = KNeighborsRegressor(n_neighbors=2)
+neigh.fit(X, Y)
+Y_pred = neigh.predict(X)
+neigh.score(X, Y)
+
+plt.figure(figsize=(20,8))
+plt.plot(Y,'r.-')
+plt.plot(Y_pred)
+
+# Conclusion: 
+##1. Both are non-parametric methods.
+##2. Decision tree supports automatic feature interaction, whereas KNN can’t.
+##3. Decision tree is faster due to KNN’s expensive real time execution.
+
