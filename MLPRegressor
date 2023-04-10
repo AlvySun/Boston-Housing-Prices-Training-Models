@@ -1,0 +1,70 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.datasets import load_boston
+from sklearn.model_selection import train_test_split
+from sklearn import linear_model
+from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPRegressor
+
+boston = load_boston()
+bostonX,bostonY = load_boston(return_X_y=True)
+boston_FeatureName = boston['feature_names']
+print("the Boston dataset training data is loaded")
+print("the dataset contains", bostonY.shape, "training data")
+print("There are", boston_FeatureName.shape, "Features, they are:")
+print(boston_FeatureName)
+print("The training data has the size of", bostonX.shape)
+
+# Python code that splits the original Wisconsin breast cancer dataset into two subsets: training/validation (80%), and test (20%).
+# Python code that uses an additional split to create a validation dataset or Python code that implements a cross-validation approach to tune
+# the MLP model hyperparameters.
+
+seed = 5
+X_train_val, X_test, Y_train_val, Y_test = train_test_split(bostonX, bostonY, test_size=.20, random_state=seed);
+print("The selected random seed is {}".format(seed))
+print("The training dataset is split into Two parts")
+print("Training/Validation dataset :", X_train_val.shape, Y_train_val.shape)
+print("Test dataset :", X_test.shape, Y_test.shape)
+
+seed = 4
+X_train, X_val, Y_train, Y_val = train_test_split(X_train_val, Y_train_val,test_size=.20, random_state=seed);
+print("The selected random seed is {}".format(seed))
+print("The training dataset is split into Two parts")
+print("Training dataset :", X_train.shape, Y_train.shape)
+print("Validation dataset :", X_val.shape, Y_val.shape)
+
+# Python code that uses MLPRegressor to train, validate and test a MLPRegressor.
+random_seed = 123
+regr = MLPRegressor(hidden_layer_sizes=(20,20,20), activation='relu',solver='adam', alpha=0.001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=400, shuffle=True, random_state=random_seed, tol=0.0001, verbose=False, warm_start=True, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
+NEPOCH = 800
+hist_train = np.zeros(NEPOCH)
+hist_val = np.zeros(NEPOCH)
+for epoch in range(NEPOCH):
+    regr.partial_fit(X_train, Y_train)
+    hist_train[epoch]= regr.score(X_train, Y_train)
+    hist_val[epoch] = regr.score(X_val, Y_val)
+print("The final training score is: ",regr.score(X_train, Y_train))
+print("The validation score is: ",regr.score(X_val, Y_val))
+print("The test score is: ",regr.score(X_test, Y_test))
+plt.figure(figsize=(8,6))
+_ = plt.plot(hist_train)
+_ = plt.plot(hist_val)
+_ = plt.title("learning curve (Score)",fontsize=15)
+_ = plt.xlabel("Iterations",fontsize=15)
+_ = plt.ylabel("Training Score",fontsize=15)
+_ = plt.legend(["Train","Validation"],fontsize=15)
+
+pred_test = regr.predict(X_test)
+_ = plt.figure(figsize=(8,6))
+_ = plt.plot(pred_test,"r.-")
+_ = plt.plot(Y_test,"b.-")
+_ = plt.title("Comparison between the Prediction and Label",fontsize=15)
+_ = plt.ylabel("House Price",fontsize=15)
+_ = plt.legend(["prediction","label"],fontsize=15)
+_ = plt.figure(figsize=(8,8))
+_ = plt.scatter(Y_test, pred_test)
+line = range(50)
+_ = plt.plot(line,line,'r')
+_ = plt.xlabel("Label",fontsize=15)
+_ = plt.ylabel("Predict",fontsize=15)
+
