@@ -1,0 +1,152 @@
+from sklearn.datasets import load_boston
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn import linear_model
+
+boston = load_boston()
+bostonX,bostonY = load_boston(return_X_y=True)
+boston_FeatureName = boston['feature_names']
+print("the Boston dataset training data is loaded")
+print("the dataset contains", bostonY.shape, "training data")
+print("There are", boston_FeatureName.shape, "Features, they are:")
+print(boston_FeatureName)
+print("The training data has the size of", bostonX.shape)
+
+def plotbyFeature():
+    plt.figure(figsize=(15,25))
+    for feature in range(0,13):
+        plt.subplot(5,3,feature+1)
+        plt.scatter(bostonY,bostonX[:,feature])
+        plt.title(boston_FeatureName[feature] + " vs. MEDV"+ " ({})".format(feature))
+        plt.ylabel(boston_FeatureName[feature])
+        plt.xlabel("MEDV")
+plotbyFeature()
+
+# Three plots that show a single feature versus the median home value, as follows:
+## • A plot showing one feature that has a strong linear relationship with home value
+## • A plot showing one feature that has a strong nonlinear relationship with home value
+## • A plot showing one feature that has no relationship with home value
+
+def plotsinglefeature(feature=0,comment=""):
+    plt.scatter(bostonY,bostonX[:,feature])
+    plt.title(boston_FeatureName[feature] + " vs. MEDV"+ " ({}) ".format(feature)+comment)
+    plt.ylabel(boston_FeatureName[feature])
+    plt.xlabel("MEDV")
+plt.figure(figsize=(15,3))
+plt.subplot(131)
+plotsinglefeature(5,"linear")
+plt.subplot(132)
+plotsinglefeature(12,"nonlinear")
+plt.subplot(133)
+plotsinglefeature(3,"norelation")
+
+# Python code that splits the original dataset into three subsets: training (70%), validation (15%) and test (15%).
+# split test dataset into three parts
+# first we will split the dataset into two using train_test_split
+# then we will further split the validation and test dataset
+seed = 2
+X_train, X_test_validation, Y_train, Y_test_validation = train_test_split(bostonX, bostonY, test_size=.30, random_state=seed);
+X_validation, X_test, Y_validation, Y_test = train_test_split(X_test_validation, Y_test_validation, test_size=.50, random_state=seed);
+del(X_test_validation,Y_test_validation)
+print("The training dataset is split into three parts")
+print("Training dataset :", X_train.shape, Y_train.shape)
+print("Test dataset :", X_test.shape, Y_test.shape)
+print("Validation dataset :", X_validation.shape, Y_validation.shape)
+
+clf = linear_model.Lasso(alpha=0.5,random_state=seed)
+clf.fit(bostonX,bostonY)
+coef = np.abs(clf.coef_)
+idx = np.argsort(coef,)[::-1]
+_ = plt.figure(figsize=(15,5))
+_ = plt.bar(x=boston_FeatureName[idx],height=coef[idx])
+coefsel = idx[:6]
+
+seed = 5
+X_train, X_test_validation, Y_train, Y_test_validation = train_test_split(bostonX, bostonY, test_size=.30,
+random_state=seed);
+X_validation, X_test, Y_validation, Y_test = train_test_split(X_test_validation, Y_test_validation, test_size=.50, random_state=seed);
+del(X_test_validation,Y_test_validation)
+X_train=X_train[:,coefsel]
+X_validation=X_validation[:,coefsel]
+X_test=X_test[:,coefsel]
+print("The training dataset is split into three parts")
+print("The selected features are:", boston_FeatureName[coefsel])
+print("Training dataset :", X_train.shape, Y_train.shape)
+print("Test dataset :", X_test.shape, Y_test.shape)
+print("Validation dataset :", X_validation.shape, Y_validation.shape)
+
+# Inputs: A list of hyperparameters, and their new values, that were modified from their default values
+# Optimize alpha
+alpha = np.linspace(0.01,1,100)
+clfscore_val = np.zeros(100)
+clfscore_train = np.zeros(100)
+for i in range(100):
+    clf = linear_model.Lasso(alpha=alpha[i])
+    clf.fit(X_train,Y_train)
+    clfscore_train[i]=clf.score(X_train,Y_train)
+    clfscore_val[i]=clf.score(X_validation,Y_validation)
+    
+plt.plot(alpha,clfscore_val,"r-")
+plt.plot(alpha,clfscore_train,"b-")
+plt.xlabel("alpha")
+plt.ylabel("score")
+_ = plt.legend(["validation","training"])
+
+# Python code that uses any of the fundamental regression algorithms mentioned above, 
+
+# along with a maximum of 6 features that do the best job of predicting home values, 
+# based on training data and strategy for hyperparameter tuning based on your validation data
+
+# Outputs: A list of the final features that you have chosen, 
+# along with their model coefficients or other learned parameters based on the training and validation data
+
+# The selected features are: 
+# alpha=0.1, fit_intercept=False, normalize=False,precompute=False, copy_X=True, max_iter=1000,
+# tol=0.0001, warm_start=False, positive=False, random_state=None, selection=‘cyclic’
+
+# seed = np.random.randint(50000)
+clf = linear_model.Lasso(alpha=0.1, fit_intercept=False, normalize=False, precompute=False, copy_X=True, max_iter=1000, tol=0.0001, warm_start=False, positive=False, random_state=None, selection='cyclic')
+clf.fit(X_train,Y_train)
+valscore = clf.score(X_validation,Y_validation)
+trainscore = clf.score(X_train,Y_train)
+testscore = clf.score(X_test,Y_test)
+print("train score: ",trainscore)
+print("validation score: ",valscore)
+print("test score: ",testscore)
+
+from sklearn.datasets import load_boston
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeRegressor
+regressor = DecisionTreeRegressor(criterion='mse', splitter='best',max_depth=15,min_samples_split=2, min_samples_leaf=1,min_weight_fraction_leaf=0.0,random_state=5, max_leaf_nodes=None,min_impurity_decrease=0.0,ccp_alpha=0.0)
+regressor.fit(X_train,Y_train)
+train_score = regressor.score(X_train,Y_train)
+val_score = regressor.score(X_validation,Y_validation)
+test_score = regressor.score(X_test,Y_test)
+print("train score: ",train_score)
+print("validation score: ",val_score)
+print("test score: ",test_score)
+
+# Inputs: A list of hyperparameters, and their new values, that were modified from their default values.
+# criterion=‘mse’, splitter=‘best’, max_depth=15,min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, 
+# max_features=None, random_state=5, max_leaf_nodes=None, min_impurity_decrease=0.0, ccp_alpha=0.0
+
+depth = np.arange(1,51,1)
+val_score = np.zeros(50)
+train_score = np.zeros(50)
+for i in range(50):
+    regressor = DecisionTreeRegressor(criterion='mse', splitter='best',max_depth=depth[i],min_samples_split=2, min_samples_leaf=1,min_weight_fraction_leaf=0.0,max_features=None,random_state=5, max_leaf_nodes=None,min_impurity_decrease=0.0,ccp_alpha=0.0)
+    regressor.fit(X_train,Y_train)
+    train_score[i] = regressor.score(X_train,Y_train)
+    val_score[i] = regressor.score(X_validation,Y_validation)
+    
+# print("train score: ",train_score)
+# print("validation score: ",val_score)
+print("test score: ",test_score)
+
+plt.plot(depth,train_score,"r-")
+plt.plot(depth,val_score,"b-")
+plt.xlabel("depth")
+plt.ylabel("score")
+_ = plt.legend(["training","validation"])
+
